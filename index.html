@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arman Hossain Barcode Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f172a; --card:#ffffff; --ink:#0f172a; --muted:#64748b;
+  --line:#e2e8f0; --brand:#4f46e5; --brand2:#7c3aed;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; font-family:Inter,Arial,sans-serif; color:var(--ink);
+  background:radial-gradient(1200px 600px at 10% -10%,#6366f1 0%,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#a855f7 0%,transparent 55%),
+             var(--bg);
+  display:flex; align-items:flex-start; justify-content:center; padding:40px 16px;
+}
+.wrap{
+  width:100%; max-width:760px; background:var(--card); border-radius:22px;
+  box-shadow:0 30px 80px rgba(0,0,0,.35); overflow:hidden;
+}
+.head{
+  padding:30px 32px; color:#fff; text-align:center;
+  background:linear-gradient(135deg,var(--brand),var(--brand2));
+}
+.head h2{margin:0; font-size:26px; font-weight:800; letter-spacing:-.3px}
+.head .name{margin-top:6px; font-size:20px; font-weight:700; opacity:.95}
+.body{padding:28px 32px 32px}
+label{display:block; font-size:13px; font-weight:600; color:var(--muted); margin:0 0 8px; text-transform:uppercase; letter-spacing:.6px}
+.seg{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding:5px;
+  background:#f1f5f9; border-radius:14px; margin-bottom:22px;
+}
+.seg input{display:none}
+.seg label{
+  margin:0; text-align:center; padding:11px 8px; border-radius:10px; cursor:pointer;
+  font-size:15px; font-weight:600; color:#475569; text-transform:none; letter-spacing:0; transition:.15s;
+}
+.seg input:checked + label{
+  background:#fff; color:var(--brand); box-shadow:0 2px 8px rgba(15,23,42,.12);
+}
+textarea{
+  width:100%; height:200px; resize:vertical; padding:16px; font-size:16px;
+  font-family:ui-monospace,Menlo,Consolas,monospace; color:var(--ink);
+  border:2px solid var(--line); border-radius:14px; outline:none; transition:.15s; background:#f8fafc;
+}
+textarea:focus{border-color:var(--brand); background:#fff; box-shadow:0 0 0 4px rgba(79,70,229,.12)}
+.hint{margin:10px 2px 0; font-size:13px; color:var(--muted)}
+.actions{margin-top:22px; display:flex; gap:12px}
+button{
+  flex:1; padding:15px 20px; font-size:16px; font-weight:700; font-family:inherit;
+  border:none; border-radius:14px; cursor:pointer; transition:.15s;
+}
+.primary{color:#fff; background:linear-gradient(135deg,var(--brand),var(--brand2)); box-shadow:0 10px 24px rgba(79,70,229,.35)}
+.primary:hover{transform:translateY(-1px); box-shadow:0 14px 28px rgba(79,70,229,.45)}
+.ghost{background:#f1f5f9; color:#334155; flex:0 0 auto}
+.ghost:hover{background:#e2e8f0}
+.err{display:none; margin-top:14px; padding:12px 14px; border-radius:12px; background:#fef2f2; color:#b91c1c; font-size:14px; font-weight:500}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <h2>Arman Hossain Barcode Generator</h2>
+    <div class="name">Arman Hossain</div>
+  </div>
+  <div class="body">
+    <label>Output Type</label>
+    <div class="seg">
+      <input type="radio" name="mode" id="m1" value="barcode" checked><label for="m1">▮▯▮ Barcode</label>
+      <input type="radio" name="mode" id="m2" value="qr"><label for="m2">▣ QR Code</label>
+      <input type="radio" name="mode" id="m3" value="both"><label for="m3">Both</label>
+    </div>
+
+    <label>Codes (one per line)</label>
+    <textarea id="input" placeholder="123456789&#10;EK123456789IN&#10;TID00012345"></textarea>
+
+    <div class="err" id="err"></div>
+
+    <div class="actions">
+      <button class="ghost" onclick="clearAll()">Clear</button>
+      <button class="primary" onclick="generate()">Generate →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function clearAll(){
+  document.getElementById("input").value="";
+  document.getElementById("err").style.display="none";
+}
+
+function showErr(msg){
+  const e=document.getElementById("err");
+  e.textContent=msg; e.style.display="block";
+}
+
+function generate(){
+  const lines=document.getElementById("input").value
+    .split(/\r?\n/).map(x=>x.trim()).filter(x=>x);
+  if(!lines.length){ showErr("Pehle kam se kam ek code likho."); return; }
+  document.getElementById("err").style.display="none";
+
+  const mode=document.querySelector('input[name="mode"]:checked').value;
+  const payload=JSON.stringify({codes:lines,mode:mode}).replace(/</g,"\\u003c");
+
+  const page = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
+  + '<meta name="viewport" content="width=device-width, initial-scale=1">'
+  + '<title>Arman Hossain - Generated Codes</title>'
+  + '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">'
+  + '<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>'
+  + '<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"><\/script>'
+  + '<style>'
+  + '*{box-sizing:border-box}'
+  + 'body{margin:0;font-family:Inter,Arial,sans-serif;background:#f1f5f9;color:#0f172a}'
+  + '.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;gap:12px;'
+  + 'padding:14px 24px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;box-shadow:0 6px 20px rgba(79,70,229,.3)}'
+  + '.top h1{margin:0;font-size:18px;font-weight:800}'
+  + '.top small{display:block;font-weight:600;opacity:.85;font-size:13px;margin-top:2px}'
+  + '.btns{display:flex;gap:8px}'
+  + '.btns button{padding:10px 18px;border:none;border-radius:10px;font-weight:700;font-size:14px;font-family:inherit;cursor:pointer}'
+  + '.b1{background:#fff;color:#4f46e5}.b2{background:rgba(255,255,255,.18);color:#fff}'
+  + '.list{max-width:900px;margin:18px auto;padding:0 16px 40px;display:flex;flex-direction:column;gap:0}'
+  + '.item{display:flex;align-items:center;gap:14px;background:#fff;border-bottom:1px solid #e5e7eb;padding:0 16px;'
+  + 'page-break-inside:avoid;break-inside:avoid}'
+  + '.list .item:first-child{border-radius:12px 12px 0 0}.list .item:last-child{border-radius:0 0 12px 12px;border-bottom:none}'
+  + '.seq{flex:0 0 44px;text-align:center;font-size:22px;font-weight:800;color:#4f46e5}'
+  + '.media{flex:1;display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap}'
+  + '.cell{text-align:center;min-width:0;max-width:100%}'
+  + '.cell svg{display:block;margin:0 auto}'
+  + '.qr{width:130px}'
+  + '.code{margin-top:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;font-weight:400;letter-spacing:0;color:#6b7280;line-height:1.2;white-space:pre-wrap;word-break:break-all}'
+  + '@media print{'
+  + '.top{display:none}body{background:#fff}'
+  + '.list{margin:0;padding:0;max-width:none;gap:0}'
+  + '.item{box-shadow:none;border:none;border-bottom:1px solid #d1d5db;border-radius:0!important;padding:0 10px}'
+  + '}'
+  + '</style></head><body>'
+  + '<div class="top"><div><h1>Arman Hossain Barcode Generator<small id="count"></small></h1></div>'
+  + '<div class="btns"><button class="b2" onclick="window.close()">Close</button>'
+  + '<button class="b1" onclick="window.print()">Print</button></div></div>'
+  + '<div class="list" id="list"></div>'
+  + '<script>'
+  + 'var DATA=' + payload + ';'
+  + 'var list=document.getElementById("list");'
+  + 'document.getElementById("count").textContent=DATA.codes.length+" code"+(DATA.codes.length>1?"s":"");'
+  + 'DATA.codes.forEach(function(code,i){'
+  + ' var item=document.createElement("div");item.className="item";'
+  + ' var media=document.createElement("div");media.className="media";'
+  + ' if(DATA.mode!=="qr"){'
+  + '  var cell=document.createElement("div");cell.className="cell";'
+  + '  var svg=document.createElementNS("http://www.w3.org/2000/svg","svg");'
+  + '  cell.appendChild(svg);media.appendChild(cell);'
+  + '  try{'
+  + '   JsBarcode(svg,code,{format:"CODE128",width:4,height:110,marginTop:0,marginBottom:0,marginLeft:24,marginRight:24,displayValue:false});'
+  + '   var w=parseFloat(svg.getAttribute("width")),h=parseFloat(svg.getAttribute("height"));'
+  + '   svg.setAttribute("viewBox","0 0 "+w+" "+h);svg.setAttribute("preserveAspectRatio","none");svg.removeAttribute("width");svg.removeAttribute("height");'
+  + '   svg.style.width="70mm";svg.style.height="20mm";'
+  + '  }catch(e){cell.innerHTML="<div style=\\"color:#b91c1c\\">Barcode ke liye invalid code</div>";}'
+  + ' }'
+  + ' if(DATA.mode!=="barcode"){'
+  + '  var q=document.createElement("div");q.className="cell qr";'
+  + '  try{var qr=qrcode(0,"M");qr.addData(code);qr.make();q.innerHTML=qr.createSvgTag({cellSize:4,margin:2,scalable:true});}'
+  + '  catch(e){q.textContent="QR error";}'
+  + '  media.appendChild(q);'
+  + ' }'
+  + ' var wrap=document.createElement("div");wrap.style.flex="1";wrap.style.textAlign="center";'
+  + ' wrap.appendChild(media);'
+  + ' var txt=document.createElement("div");txt.className="code";txt.textContent=(i+1)+"  "+code;wrap.appendChild(txt);'
+  + ' item.appendChild(wrap);list.appendChild(item);'
+  + '});'
+  + '<\/script></body></html>';
+
+  const blob=new Blob([page],{type:"text/html"});
+  const url=URL.createObjectURL(blob);
+  const w=window.open(url,"_blank");
+  if(!w){ showErr("Browser ne new tab block kar diya. Is site ke liye pop-ups allow karo aur dobara Generate dabao."); }
+}
+</script>
+</body>
+</html>
